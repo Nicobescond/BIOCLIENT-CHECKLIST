@@ -1,1 +1,326 @@
 
+# 🚀 Démarrage Rapide - Application Audit BIOCOOP
+
+## ⚡ Installation Express (5 minutes)
+
+### Windows
+
+1. **Télécharger Python**
+   - Aller sur https://www.python.org/downloads/
+   - Télécharger Python 3.11 ou supérieur
+   - ⚠️ Cocher "Add Python to PATH" lors de l'installation
+
+2. **Extraire les fichiers**
+   - Décompresser le ZIP dans un dossier (ex: `C:\audit-biocoop\`)
+
+3. **Installer les dépendances**
+   - Ouvrir le PowerShell ou CMD dans le dossier
+   - Taper : `pip install -r requirements.txt`
+
+4. **Lancer l'application**
+   - Taper : `streamlit run app.py`
+   - L'application s'ouvre dans votre navigateur !
+
+### Mac/Linux
+
+```bash
+# 1. Vérifier Python (doit être ≥ 3.8)
+python3 --version
+
+# 2. Aller dans le dossier
+cd chemin/vers/audit-biocoop
+
+# 3. Installer les dépendances
+pip3 install -r requirements.txt
+
+# 4. Lancer l'application
+streamlit run app.py
+
+# OU utiliser le script de démarrage
+chmod +x start.sh
+./start.sh
+```
+
+---
+
+## 📱 Première Utilisation
+
+### Étape 1 : Informations Fournisseur (2 min)
+
+Remplissez les informations du fournisseur à auditer :
+
+**Obligatoire ⭐** :
+- Nom du fournisseur
+- Adresse de production
+- Interlocuteurs rencontrés
+- Contact de crise
+- Gamme de produits
+- Certifications
+- Date d'audit
+- Nom de l'auditeur
+
+**Optionnel** :
+- Effectif
+- Nombre de personnes qualité
+- Année de partenariat
+- Dernière visite BIOCOOP
+
+➡️ Cliquez sur "Passer à la checklist d'audit"
+
+### Étape 2 : Audit (30-90 min)
+
+Pour chaque point de la checklist :
+
+1. **Lire** la question
+2. **Observer** sur site / Consulter les documents
+3. **Noter** : A (conforme), B (NC mineure), C (NC majeure), N/A (non applicable)
+4. **Commenter** vos observations dans le champ texte
+
+**Conseils** :
+- ✅ Soyez précis dans vos commentaires
+- 📸 Notez les preuves observées
+- 🔍 Demandez les documents justificatifs
+- ⏱️ Prenez votre temps pour chaque point
+
+**Filtres disponibles** :
+- Par catégorie (sélectionner une seule catégorie)
+- Par notation (afficher seulement A, B, C ou N/A)
+
+➡️ Cliquez sur "Générer le rapport"
+
+### Étape 3 : Rapport (1 min)
+
+Visualisez :
+- 📊 Score global de conformité
+- 📈 Scores par catégorie
+- ⚠️ Liste des non-conformités
+- 📋 Plan d'action pré-rempli
+
+➡️ Cliquez sur "Télécharger le rapport Excel"
+
+---
+
+## 📥 Que contient le rapport Excel ?
+
+Le fichier Excel généré contient **4 feuilles** :
+
+### 1. Informations Fournisseur
+Toutes les données d'identification saisies
+
+### 2. Résultats Audit
+- Checklist complète avec toutes les réponses
+- Codage couleur : 🟢 Conforme / 🟡 NC mineure / 🔴 NC majeure
+- Tous vos commentaires d'audit
+
+### 3. Plan d'Action ⭐
+**C'est la feuille la plus importante !**
+
+Pré-remplie avec :
+- ✅ ID de chaque non-conformité
+- ✅ Point d'audit concerné
+- ✅ Votre constat (commentaire)
+
+À compléter par le magasin/fournisseur :
+- ⚠️ Action corrective à mettre en place
+- ⚠️ Responsable de l'action
+- ⚠️ Délai de réalisation
+- ⚠️ Suivi du statut
+
+**Codage couleur** :
+- 🔴 Rouge = Non-conformité majeure (C) → Priorité haute
+- 🟡 Jaune = Non-conformité mineure (B) → À traiter
+
+### 4. Synthèse
+- Score global
+- Niveau de conformité (Excellent / Satisfaisant / Acceptable / Insuffisant / Non conforme)
+- Tableau des scores par catégorie
+
+---
+
+## 🎯 Exemple d'Audit Complet
+
+### Scénario : Audit d'une petite conserverie bio
+
+**Fournisseur** : Conserverie du Terroir  
+**Produits** : Confitures, compotes, coulis de tomates
+
+#### Points à vérifier particulièrement :
+
+1. **Sécurité alimentaire**
+   - ✅ Plan HACCP adapté (cuisson, remplissage à chaud, retournement)
+   - ✅ Gestion des allergènes (fruits à coque dans confitures)
+   - ✅ Contrôle thermique des pasteurisateurs
+   - ✅ Traçabilité des lots
+
+2. **Hygiène**
+   - ✅ Tenues de travail propres et complètes
+   - ✅ Nettoyage des lignes de production documenté
+   - ✅ État des locaux et équipements
+
+3. **Réglementation**
+   - ✅ Certificat bio valide et à jour
+   - ✅ Étiquetage conforme (DLC, lot, liste ingrédients)
+   - ✅ Test de traçabilité réalisé
+
+4. **Exigences BIOCOOP**
+   - ✅ Sucre de canne : commerce équitable ? (label sur emballage ?)
+   - ✅ Arômes naturels bio ?
+   - ✅ Aucun label interdit sur les pots ?
+   - ✅ Origine des fruits : France ou UE ?
+
+#### Résultats type :
+
+- **19/21** points conformes (A)
+- **2** non-conformités mineures (B) :
+  - Manque enregistrement température sur une journée → B
+  - Label commerce équitable absent sur un produit → B
+
+**Score global** : 88% → **SATISFAISANT** ✅
+
+**Plan d'action** :
+1. Mettre à jour le tableur d'enregistrement des températures
+2. Refaire imprimer les étiquettes avec label Max Havelaar visible
+
+---
+
+## 🔧 Trucs et Astuces
+
+### Gagner du temps
+
+1. **Préparez votre audit**
+   - Demandez les documents à l'avance (certificats, procédures)
+   - Consultez la dernière fiche de visite BIOCOOP
+
+2. **Utilisez les filtres**
+   - Pendant l'audit, filtrez par catégorie pour vous concentrer
+   - Après l'audit, filtrez par notation B et C pour voir les non-conformités
+
+3. **Commentaires efficaces**
+   ```
+   ✅ BON : "Certificat bio FR-BIO-01 consulté, valide jusqu'au 31/12/2025, 
+   couvre toutes les gammes (confitures, compotes, coulis)"
+   
+   ❌ À ÉVITER : "Certificat OK"
+   ```
+
+### Pendant l'audit
+
+- 📝 Prenez des notes manuscrites, saisissez ensuite dans l'app
+- 🔄 L'app sauvegarde automatiquement vos réponses
+- ⬅️ Vous pouvez revenir en arrière sans perdre vos données
+- 💾 Pensez à télécharger le rapport à la fin !
+
+### Cas particuliers
+
+**Fournisseur avec peu d'items applicables ?**
+- Utilisez N/A pour les points non concernés
+- Le score est calculé uniquement sur les items applicables
+
+**Audit interrompu ?**
+- Les données restent en mémoire pendant votre session navigateur
+- ⚠️ Si vous fermez le navigateur, vous perdrez vos données
+- → Téléchargez régulièrement une version intermédiaire
+
+**Besoin de modifier après génération du rapport ?**
+- Retournez à la checklist
+- Modifiez les points nécessaires
+- Régénérez le rapport
+
+---
+
+## ❓ FAQ
+
+**Q : L'application fonctionne hors ligne ?**  
+R : Oui ! Une fois lancée, vous n'avez pas besoin d'internet (sauf si vous avez des images externes).
+
+**Q : Peut-on auditer plusieurs fournisseurs en même temps ?**  
+R : Non, un audit à la fois. Téléchargez le rapport Excel, puis recommencez un nouvel audit.
+
+**Q : Peut-on personnaliser la checklist ?**  
+R : Oui ! Modifiez le fichier `app.py`, section `CHECKLIST_AUDIT`. Voir README.md pour les détails.
+
+**Q : Combien de temps sont conservées les données ?**  
+R : Les données sont en mémoire pendant votre session. Dès que vous fermez le navigateur, elles sont perdues. **C'est voulu** pour la confidentialité !
+
+**Q : Peut-on ajouter un logo ?**  
+R : Oui ! Remplacez l'URL de l'image dans la sidebar du fichier `app.py`.
+
+**Q : Compatible mobile/tablette ?**  
+R : Oui, l'interface s'adapte. Mais nous recommandons un ordinateur pour plus de confort.
+
+**Q : Peut-on imprimer le rapport ?**  
+R : Ouvrez le fichier Excel et imprimez depuis Excel/LibreOffice pour un meilleur rendu.
+
+---
+
+## 🆘 Problèmes Courants
+
+### "streamlit : commande introuvable"
+
+**Solution** :
+```bash
+# Vérifier l'installation
+pip list | grep streamlit
+
+# Si absent, réinstaller
+pip install streamlit
+```
+
+### L'application ne se lance pas
+
+**Solution** :
+```bash
+# Vérifier Python
+python --version  # Doit être ≥ 3.8
+
+# Réinstaller les dépendances
+pip install -r requirements.txt --force-reinstall
+
+# Relancer
+streamlit run app.py
+```
+
+### "Port 8501 déjà utilisé"
+
+**Solution** :
+```bash
+# Windows
+netstat -ano | findstr :8501
+taskkill /PID <numero> /F
+
+# Mac/Linux
+lsof -i :8501
+kill -9 <PID>
+```
+
+### Génération Excel échoue
+
+**Vérifications** :
+- ✅ Tous les champs obligatoires sont remplis ?
+- ✅ Au moins un item a été noté ?
+- ✅ Nom du fournisseur ne contient pas de caractères spéciaux ?
+
+---
+
+## 📞 Besoin d'aide ?
+
+- 📧 **Email** : support@votre-organisme.fr
+- 💬 **Documentation complète** : Voir README.md
+- 🐛 **Problème technique** : Créez une issue sur GitHub
+
+---
+
+## ✨ Prochaines Étapes
+
+Une fois l'application maîtrisée :
+
+1. 🌐 **Déployez en ligne** (voir DEPLOYMENT.md)
+2. 🔐 **Ajoutez une authentification** pour sécuriser
+3. 💾 **Intégrez une base de données** pour conserver l'historique
+4. 📊 **Créez des statistiques** sur vos audits
+
+---
+
+**Bon audit ! 🏪✅**
+
+*Version 1.0 - Octobre 2025*
