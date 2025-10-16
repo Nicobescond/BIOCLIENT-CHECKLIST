@@ -3,28 +3,6 @@ import pandas as pd
 import json
 from datetime import datetime
 import io
-import sys
-
-# Import avec gestion d'erreur pour openpyxl
-try:
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    from openpyxl.utils.dataframe import dataframe_to_rows
-    OPENPYXL_AVAILABLE = True
-except ImportError as e:
-    st.error(f"⚠️ Erreur d'import openpyxl: {e}")
-    st.info("📦 Installation de openpyxl en cours...")
-    try:
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl==3.1.5", "--no-cache-dir"])
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-        from openpyxl.utils.dataframe import dataframe_to_rows
-        OPENPYXL_AVAILABLE = True
-        st.success("✅ openpyxl installé avec succès!")
-    except Exception as install_error:
-        st.error(f"❌ Impossible d'installer openpyxl: {install_error}")
-        OPENPYXL_AVAILABLE = False
 
 # Configuration de la page
 st.set_page_config(
@@ -350,59 +328,72 @@ def get_niveau_conformite(score):
         return "NON CONFORME", "#dc3545"
 
 def generer_rapport_excel(fournisseur_info, audit_data):
-    """Génère un rapport d'audit complet en Excel"""
-    if not OPENPYXL_AVAILABLE:
-        st.error("❌ Impossible de générer le rapport Excel : openpyxl n'est pas disponible")
-        return None
-    
+    """Génère un rapport d'audit complet en Excel avec xlsxwriter"""
     try:
-        wb = Workbook()
+        import xlsxwriter
         
-        # Styles
-        header_fill = PatternFill(start_color="2C3E50", end_color="2C3E50", fill_type="solid")
-        header_font = Font(bold=True, color="FFFFFF", size=12)
-        categorie_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
-        categorie_font = Font(bold=True, color="FFFFFF", size=11)
+        # Créer un buffer en mémoire
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         
-        conforme_fill = PatternFill(start_color="D5F4E6", end_color="D5F4E6", fill_type="solid")
-        mineur_fill = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
-        majeur_fill = PatternFill(start_color="F8D7DA", end_color="F8D7DA", fill_type="solid")
+        # Définir les formats
+        header_format = workbook.add_format({
+            'bold': True,
+            'font_color': 'white',
+            'bg_color': '#2C3E50',
+            'font_size': 12,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1
+        })
         
-        border = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
-        )
+        title_format = workbook.add_format({
+            'bold': True,
+            'font_size': 16,
+            'align': 'left'
+        })
         
-        # FEUILLE 1: Informations générales
-        ws1 = wb.active
-        ws1.title = "Informations Fournisseur"
+        bold_format = workbook.add_format({'bold': True})
         
-        ws1['A1'] = "RAPPORT D'AUDIT FOURNISSEUR BIOCOOP"
-        ws1['A1'].font = Font(bold=True, size=16)
-        ws1.merge_cells('A1:D1')
+        conforme_format = workbook.add_format({
+            'bg_color': '#D5F4E6',
+            'border': 1
+        })
         
-        row = 3
-        for key, value in fournisseur_info.items():
-            ws1[f'A{row}'] = key
-            ws1[f'A{row}'].font = Font(bold=True)
-            ws1[f'B{row}'] = value
-            row += 1
+        mineur_format = workbook.add_format({
+            'bg_color': '#FFF3CD',
+            'border': 1
+        })
         
-        # FEUILLE 2: Résultats d'audit détaillés
-        ws2 = wb.create_sheet("Résultats Audit")
+        majeur_format = workbook.add_format({
+            'bg_color': '#F8D7DA',
+            'border': 1
+        })
         
-        # En-têtes
-        headers = ["ID", "Catégorie", "Question", "Notation", "Commentaire", "Criticité"]
-        for col, header in enumerate(headers, 1):
-            cell = ws2.cell(row=1, column=col, value=header)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-            cell.border = border
+        border_format = workbook.add_format({'border': 1})
+        
+        # FEUILLE 1: Informations Fournisseur
+        ws1 = workbook.add_worksheet("Informations Fournisseur")
+        ws1.write(0, 0, "RAPPORT D'AUDIT FOURNISSEUR BIOCOOP", title_format)
+        ws1.merge_range(0, 0, 0, 3, "RAPPORT D'AUDIT FOURNISSEUR BIOCOOP", title_format)
         
         row = 2
+        for key, value in fournisseur_info.items():
+            ws1.write(row, 0, key, bold_format)
+            ws1.write(row, 1, str(value))
+            row += 1
+        
+        ws1.set_column('A:A', 35)
+        ws1.set_column('B:B', 50)
+        
+        # FEUILLE 2: Résultats Audit
+        ws2 = workbook.add_worksheet("Résultats Audit")
+        
+        headers = ["ID", "Catégorie", "Question", "Notation", "Commentaire", "Criticité"]
+        for col, header in enumerate(headers):
+            ws2.write(0, col, header, header_format)
+        
+        row = 1
         for categorie, data in CHECKLIST_AUDIT.items():
             for item in data["items"]:
                 item_id = item["id"]
@@ -410,134 +401,109 @@ def generer_rapport_excel(fournisseur_info, audit_data):
                     notation = audit_data[item_id]["notation"]
                     commentaire = audit_data[item_id].get("commentaire", "")
                     
-                    ws2.cell(row=row, column=1, value=item_id)
-                    ws2.cell(row=row, column=2, value=categorie.split(".")[1].strip())
-                    ws2.cell(row=row, column=3, value=item["question"])
-                    ws2.cell(row=row, column=4, value=notation)
-                    ws2.cell(row=row, column=5, value=commentaire)
-                    ws2.cell(row=row, column=6, value=data["criticite"])
-                    
-                    # Coloration selon notation
+                    # Choisir le format selon la notation
                     if notation == "A":
-                        fill = conforme_fill
+                        cell_format = conforme_format
                     elif notation == "B":
-                        fill = mineur_fill
+                        cell_format = mineur_format
                     elif notation == "C":
-                        fill = majeur_fill
+                        cell_format = majeur_format
                     else:
-                        fill = None
+                        cell_format = border_format
                     
-                    if fill:
-                        for col in range(1, 7):
-                            ws2.cell(row=row, column=col).fill = fill
-                    
-                    for col in range(1, 7):
-                        ws2.cell(row=row, column=col).border = border
+                    ws2.write(row, 0, item_id, cell_format)
+                    ws2.write(row, 1, categorie.split(".")[1].strip(), cell_format)
+                    ws2.write(row, 2, item["question"], cell_format)
+                    ws2.write(row, 3, notation, cell_format)
+                    ws2.write(row, 4, commentaire, cell_format)
+                    ws2.write(row, 5, data["criticite"], cell_format)
                     
                     row += 1
         
-        # Ajuster les largeurs de colonnes
-        ws2.column_dimensions['A'].width = 12
-        ws2.column_dimensions['B'].width = 30
-        ws2.column_dimensions['C'].width = 50
-        ws2.column_dimensions['D'].width = 12
-        ws2.column_dimensions['E'].width = 40
-        ws2.column_dimensions['F'].width = 15
+        ws2.set_column('A:A', 12)
+        ws2.set_column('B:B', 30)
+        ws2.set_column('C:C', 50)
+        ws2.set_column('D:D', 12)
+        ws2.set_column('E:E', 40)
+        ws2.set_column('F:F', 15)
         
-        # FEUILLE 3: Plan d'action
-        ws3 = wb.create_sheet("Plan d'Action")
+        # FEUILLE 3: Plan d'Action
+        ws3 = workbook.add_worksheet("Plan d'Action")
         
-        # En-têtes plan d'action
         action_headers = ["ID", "Point d'audit", "Non-conformité", "Action corrective", 
-                         "Responsable", "Délai", "Statut", "Date de clôture", "Commentaires"]
-        for col, header in enumerate(action_headers, 1):
-            cell = ws3.cell(row=1, column=col, value=header)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-            cell.border = border
+                         "Responsable", "Délai", "Statut", "Date clôture", "Commentaires"]
+        for col, header in enumerate(action_headers):
+            ws3.write(0, col, header, header_format)
         
-        row = 2
+        row = 1
         for categorie, data in CHECKLIST_AUDIT.items():
             for item in data["items"]:
                 item_id = item["id"]
                 if item_id in audit_data and audit_data[item_id]["notation"] in ["B", "C"]:
-                    ws3.cell(row=row, column=1, value=item_id)
-                    ws3.cell(row=row, column=2, value=item["question"])
-                    ws3.cell(row=row, column=3, value=audit_data[item_id].get("commentaire", ""))
-                    ws3.cell(row=row, column=4, value="[À définir]")
-                    ws3.cell(row=row, column=5, value="[Responsable]")
-                    ws3.cell(row=row, column=6, value="[Date limite]")
-                    ws3.cell(row=row, column=7, value="En cours")
-                    ws3.cell(row=row, column=8, value="")
-                    ws3.cell(row=row, column=9, value="")
+                    cell_format = majeur_format if audit_data[item_id]["notation"] == "C" else mineur_format
                     
-                    # Coloration selon criticité
-                    fill = majeur_fill if audit_data[item_id]["notation"] == "C" else mineur_fill
-                    for col in range(1, 10):
-                        ws3.cell(row=row, column=col).fill = fill
-                        ws3.cell(row=row, column=col).border = border
+                    ws3.write(row, 0, item_id, cell_format)
+                    ws3.write(row, 1, item["question"], cell_format)
+                    ws3.write(row, 2, audit_data[item_id].get("commentaire", ""), cell_format)
+                    ws3.write(row, 3, "[À définir]", cell_format)
+                    ws3.write(row, 4, "[Responsable]", cell_format)
+                    ws3.write(row, 5, "[Date limite]", cell_format)
+                    ws3.write(row, 6, "En cours", cell_format)
+                    ws3.write(row, 7, "", cell_format)
+                    ws3.write(row, 8, "", cell_format)
                     
                     row += 1
         
-        # Ajuster les largeurs
-        for col, width in zip(range(1, 10), [12, 40, 35, 35, 20, 15, 12, 15, 30]):
-            ws3.column_dimensions[chr(64 + col)].width = width
+        ws3.set_column('A:A', 12)
+        ws3.set_column('B:B', 40)
+        ws3.set_column('C:C', 35)
+        ws3.set_column('D:D', 35)
+        ws3.set_column('E:E', 20)
+        ws3.set_column('F:F', 15)
+        ws3.set_column('G:G', 12)
+        ws3.set_column('H:H', 15)
+        ws3.set_column('I:I', 30)
         
-        # FEUILLE 4: Synthèse et scores
-        ws4 = wb.create_sheet("Synthèse")
+        # FEUILLE 4: Synthèse
+        ws4 = workbook.add_worksheet("Synthèse")
         
         score_global, details = calculer_score_global(audit_data)
         niveau, couleur = get_niveau_conformite(score_global)
         
-        ws4['A1'] = "SYNTHÈSE DE L'AUDIT"
-        ws4['A1'].font = Font(bold=True, size=16)
-        ws4.merge_cells('A1:D1')
+        ws4.write(0, 0, "SYNTHÈSE DE L'AUDIT", title_format)
+        ws4.merge_range(0, 0, 0, 3, "SYNTHÈSE DE L'AUDIT", title_format)
         
-        ws4['A3'] = "Score Global"
-        ws4['B3'] = f"{score_global:.1f}%"
-        ws4['A4'] = "Niveau de Conformité"
-        ws4['B4'] = niveau
+        ws4.write(2, 0, "Score Global", bold_format)
+        ws4.write(2, 1, f"{score_global:.1f}%", bold_format)
+        ws4.write(3, 0, "Niveau de Conformité", bold_format)
+        ws4.write(3, 1, niveau, bold_format)
         
-        ws4['A3'].font = Font(bold=True)
-        ws4['A4'].font = Font(bold=True)
-        ws4['B3'].font = Font(bold=True, size=14)
-        ws4['B4'].font = Font(bold=True, size=14)
+        ws4.write(5, 0, "Scores par catégorie", bold_format)
         
-        # Scores par catégorie
-        ws4['A6'] = "Scores par catégorie"
-        ws4['A6'].font = Font(bold=True, size=12)
+        headers_synth = ["Catégorie", "Score (%)", "Criticité", "Items évalués"]
+        for col, header in enumerate(headers_synth):
+            ws4.write(6, col, header, header_format)
         
         row = 7
-        ws4.cell(row=row, column=1, value="Catégorie")
-        ws4.cell(row=row, column=2, value="Score (%)")
-        ws4.cell(row=row, column=3, value="Criticité")
-        ws4.cell(row=row, column=4, value="Items évalués")
-        
-        for col in range(1, 5):
-            ws4.cell(row=row, column=col).fill = header_fill
-            ws4.cell(row=row, column=col).font = header_font
-        
-        row += 1
         for categorie, info in details.items():
-            ws4.cell(row=row, column=1, value=categorie.split(".")[1].strip())
-            ws4.cell(row=row, column=2, value=f"{info['score']:.1f}%")
-            ws4.cell(row=row, column=3, value=info['criticite'])
-            ws4.cell(row=row, column=4, value=info['items_evalues'])
+            ws4.write(row, 0, categorie.split(".")[1].strip())
+            ws4.write(row, 1, f"{info['score']:.1f}%")
+            ws4.write(row, 2, info['criticite'])
+            ws4.write(row, 3, info['items_evalues'])
             row += 1
         
-        ws4.column_dimensions['A'].width = 40
-        ws4.column_dimensions['B'].width = 15
-        ws4.column_dimensions['C'].width = 15
-        ws4.column_dimensions['D'].width = 15
+        ws4.set_column('A:A', 40)
+        ws4.set_column('B:B', 15)
+        ws4.set_column('C:C', 15)
+        ws4.set_column('D:D', 15)
         
-        # Sauvegarder dans un buffer
-        buffer = io.BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
+        # Fermer le workbook
+        workbook.close()
         
-        return buffer
-    
+        # Récupérer le buffer
+        output.seek(0)
+        return output
+        
     except Exception as e:
         st.error(f"❌ Erreur lors de la génération du rapport Excel : {e}")
         return None
@@ -575,7 +541,7 @@ def main():
         st.markdown("**N/A** = Non applicable ⊘")
         
         st.divider()
-        st.caption("Version 1.0 - Octobre 2025")
+        st.caption("Version 1.1 - Octobre 2025")
     
     # Contenu principal
     if st.session_state.current_step == 1:
@@ -825,30 +791,28 @@ def afficher_etape_rapport():
     # Génération du rapport Excel
     st.subheader("📥 Télécharger le rapport complet")
     
-    if not OPENPYXL_AVAILABLE:
-        st.error("❌ La génération de rapport Excel n'est pas disponible. Le module openpyxl n'a pas pu être chargé.")
-        st.info("💡 Vous pouvez copier les données ci-dessus ou contacter le support technique.")
-    else:
-        col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🔄 Régénérer le rapport", use_container_width=True):
+            st.rerun()
+    
+    with col2:
+        buffer = generer_rapport_excel(st.session_state.fournisseur_info, st.session_state.audit_data)
         
-        with col1:
-            if st.button("🔄 Régénérer le rapport", use_container_width=True):
-                st.rerun()
-        
-        with col2:
-            buffer = generer_rapport_excel(st.session_state.fournisseur_info, st.session_state.audit_data)
+        if buffer:
+            nom_fichier = f"Audit_BIOCOOP_{st.session_state.fournisseur_info.get('Nom du fournisseur', 'Fournisseur').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx"
             
-            if buffer:
-                nom_fichier = f"Audit_BIOCOOP_{st.session_state.fournisseur_info.get('Nom du fournisseur', 'Fournisseur').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-                
-                st.download_button(
-                    label="📥 Télécharger le rapport Excel",
-                    data=buffer,
-                    file_name=nom_fichier,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    type="primary",
-                    use_container_width=True
-                )
+            st.download_button(
+                label="📥 Télécharger le rapport Excel",
+                data=buffer,
+                file_name=nom_fichier,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                type="primary",
+                use_container_width=True
+            )
+        else:
+            st.error("❌ Impossible de générer le rapport Excel")
     
     st.markdown("---")
     
